@@ -15,7 +15,8 @@ cd base/Vencord
 BASE_HASH=$(git rev-parse --short HEAD)
 cd ../..
 
-patch dist/Vencord/src/webpack/patchWebpack.ts src/patch-webpack.patch || { echo "Patch failed"; exit 1; }
+patch dist/Vencord/src/webpack/patchWebpack.ts src/patch-webpack.patch || { echo "Webpack Patch failed"; exit 1; }
+patch dist/Vencord/src/main/csp/index.ts src/patch-csp.patch || { echo "CSP Patch failed"; exit 1; }
 
 cp -r src/bdCompatLayer dist/Vencord/src/plugins/bdCompatLayer
 cd dist/Vencord
