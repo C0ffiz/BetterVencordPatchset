@@ -390,8 +390,8 @@ const test_util = (source: string, what: string) => {
 function parseNewMeta(pluginCode: string, filename: string) {
     let lastSuccessfulMetaLine = 0;
     let metaEndLine = 0;
-    const resultMeta = { name: "", id: "", description: "", authors: [] as { id: number, name: string; }[], version: "" };
-    let authorIds = [] as number[];
+    const resultMeta = { name: "", id: "", description: "", authors: [] as { id: bigint, name: string; }[], version: "" };
+    let authorIds = [] as bigint[];
     let authorNames = [] as string[];
 
     try {
@@ -421,7 +421,7 @@ function parseNewMeta(pluginCode: string, filename: string) {
             } else if (element.startsWith("@authorLink")) {
                 // TODO: support this
             } else if (element.startsWith("@authorId")) {
-                authorIds = element.split("@authorId ")[1].split(",").map(x => BigInt(x.trim())) as unknown[] as number[];
+                authorIds = element.split("@authorId ")[1].split(",").map(x => BigInt(x.trim())) as unknown[] as bigint[];
             } else if (element.startsWith("@author")) {
                 authorNames = element.split("@author ")[1].split(",").map(x => x.trim());
             } else if (element !== "" && element.length > 2)

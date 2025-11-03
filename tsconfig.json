@@ -1,0 +1,21 @@
+{
+    "exclude": [
+        "base"
+    ],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@*": [
+                "node_modules/@vencord/types/*"
+            ]
+        },
+        "jsx": "react-jsx",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "lib": [
+            "ES2024",
+            "DOM",
+            "DOM.Iterable"
+        ]
+    }
+}

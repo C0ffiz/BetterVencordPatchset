@@ -44,8 +44,14 @@ const thePlugin = {
     name: PLUGIN_NAME,
     description: "Converts BD plugins to run in Vencord",
     authors: [
-        Devs.Davvy,
-        Devs.WhoIsThis,
+        {
+            id: 568109529884000260n,
+            name: "Davilarek",
+        },
+        {
+            id: 917630027477159986n,
+            name: "zrodevkaan",
+        },
     ],
     // patches: [
     //     {
