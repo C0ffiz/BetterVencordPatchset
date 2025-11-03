@@ -17,6 +17,8 @@ cd ../..
 
 patch dist/Vencord/src/webpack/patchWebpack.ts src/patch-webpack.patch || { echo "Webpack Patch failed"; exit 1; }
 patch dist/Vencord/src/main/csp/index.ts src/patch-csp.patch || { echo "CSP Patch failed"; exit 1; }
+patch dist/Vencord/package.json src/patch-package_json.patch || { echo "package.json Patch failed"; exit 1; }
+patch dist/Vencord/scripts/build/common.mjs src/patch-banImportPlugin.patch || { echo "banImportPlugin Patch failed"; exit 1; }
 
 cp -r src/bdCompatLayer dist/Vencord/src/plugins/bdCompatLayer
 cd dist/Vencord
