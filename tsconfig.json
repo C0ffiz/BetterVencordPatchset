@@ -1,6 +1,7 @@
 {
     "exclude": [
-        "base"
+        "base",
+        "dist",
     ],
     "compilerOptions": {
         "baseUrl": ".",

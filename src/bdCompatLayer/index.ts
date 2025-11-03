@@ -22,7 +22,6 @@
 // const process = require("~process");
 import { Settings } from "@api/Settings";
 import { copyToClipboard } from "@utils/clipboard";
-import { Devs } from "@utils/constants";
 import definePlugin, { OptionType, PluginDef } from "@utils/types";
 import { React } from "@webpack/common";
 
@@ -34,7 +33,7 @@ import { addContextMenu, addDiscordModules, FakeEventEmitter, fetchWithCorsProxy
 import { injectSettingsTabs, unInjectSettingsTab } from "./fileSystemViewer";
 import { addCustomPlugin, convertPlugin, removeAllCustomPlugins } from "./pluginConstructor";
 import { ReactUtils_filler } from "./stuffFromBD";
-import { aquireNative, compat_logger, FSUtils, getDeferred, reloadCompatLayer, simpleGET, ZIPUtils } from "./utils";
+import { compat_logger, FSUtils, getDeferred, reloadCompatLayer, simpleGET, ZIPUtils } from "./utils";
 // String.prototype.replaceAll = function (search, replacement) {
 //     var target = this;
 //     return target.split(search).join(replacement);
@@ -307,9 +306,6 @@ const thePlugin = {
                     // HOME: "/home/fake",
                     _home_secret: "",
                     get HOME() {
-                        if (reallyUsePoorlyMadeRealFs) {
-                            return this._home_secret;
-                        }
                         const target = "/home/fake";
                         FSUtils.mkdirSyncRecursive(target);
                         return target;
