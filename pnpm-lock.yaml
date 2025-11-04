@@ -22,7 +22,7 @@ importers:
         version: 1.2.5(@zenfs/core@2.4.2)(kerium@1.3.8)(utilium@2.5.8)
       real-fs-client:
         specifier: github:LosersUnited/RealFS-client
-        version: https://codeload.github.com/LosersUnited/RealFS-client/tar.gz/f0a55f8117a639c5c8084f50579f7558c9f0e465(kerium@1.3.8)(utilium@2.5.8)
+        version: https://codeload.github.com/LosersUnited/RealFS-client/tar.gz/0d2d9cd8a82f544c01a335acc7c7cdaeb47025b3
 
 packages:
 
@@ -120,8 +120,8 @@ packages:
     resolution: {integrity: sha512-oIGGmcpTLwPga8Bn6/Z75SVaH1z5dUut2ibSyAMVhmUggWpmDn2dapB0n7f8nwaSiRtepAsfJyfXIO5DCVAODg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
-  real-fs-client@https://codeload.github.com/LosersUnited/RealFS-client/tar.gz/f0a55f8117a639c5c8084f50579f7558c9f0e465:
-    resolution: {tarball: https://codeload.github.com/LosersUnited/RealFS-client/tar.gz/f0a55f8117a639c5c8084f50579f7558c9f0e465}
+  real-fs-client@https://codeload.github.com/LosersUnited/RealFS-client/tar.gz/0d2d9cd8a82f544c01a335acc7c7cdaeb47025b3:
+    resolution: {tarball: https://codeload.github.com/LosersUnited/RealFS-client/tar.gz/0d2d9cd8a82f544c01a335acc7c7cdaeb47025b3}
     version: 1.0.0
 
   safe-buffer@5.2.1:
@@ -251,14 +251,10 @@ snapshots:
       process: 0.11.10
       string_decoder: 1.3.0
 
-  real-fs-client@https://codeload.github.com/LosersUnited/RealFS-client/tar.gz/f0a55f8117a639c5c8084f50579f7558c9f0e465(kerium@1.3.8)(utilium@2.5.8):
+  real-fs-client@https://codeload.github.com/LosersUnited/RealFS-client/tar.gz/0d2d9cd8a82f544c01a335acc7c7cdaeb47025b3:
     dependencies:
       '@zenfs/core': 2.4.2
-      '@zenfs/dom': 1.2.5(@zenfs/core@2.4.2)(kerium@1.3.8)(utilium@2.5.8)
       RealFS-ng-prototype.git#dev: https://codeload.github.com/LosersUnited/RealFS-ng-prototype/tar.gz/40fd4b1ea223cfcba6a45a0dfa0537e67b98193d
-    transitivePeerDependencies:
-      - kerium
-      - utilium
 
   safe-buffer@5.2.1: {}
 
