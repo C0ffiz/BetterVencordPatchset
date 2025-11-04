@@ -316,7 +316,7 @@ const thePlugin = {
                 const Original = FakeEventEmitter;
                 const Copy = class extends Original { };
                 Object.defineProperty(Copy, "EventEmitter", { value: Copy });
-                return Copy;
+                return Copy as typeof Copy & { EventEmitter: typeof FakeEventEmitter };
             },
             electron: {},
             process: {
