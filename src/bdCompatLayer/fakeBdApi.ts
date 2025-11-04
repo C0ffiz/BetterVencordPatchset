@@ -1178,6 +1178,10 @@ class BdApiReImplementationInstance {
         },
         extend: ObjectMerger.perform.bind(ObjectMerger),
         debounce: lodash.debounce,
+        className: (...a: any[]) => a.flatMap(v => typeof v === "object" && !Array.isArray(v)
+            ? Object.keys(v).filter(k => v[k])
+            : v
+        ).filter(Boolean).join(" "),
     };
     get UI() {
         return UIHolder;

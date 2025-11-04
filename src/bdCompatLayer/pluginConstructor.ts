@@ -240,10 +240,13 @@ export async function convertPlugin(BetterDiscordPlugin: string, filename: strin
     });
     (window.BdCompatLayer.queuedPlugins as any[]).push(final.myProxy);
 
-    final.internals = wrapBetterDiscordPluginCode(BetterDiscordPlugin, filename);
+    final.internals = wrapBetterDiscordPluginCode(BetterDiscordPlugin, filename, final.name);
     let { exports } = final.internals.module;
     if (typeof exports === "object") {
         exports = exports[final.name] ?? exports.default;
+    }
+    if (typeof exports === "undefined") {
+        exports = final.internals.module.workingTmp;
     }
     try {
         final.instance = exports.prototype ? new exports(final) : exports(final);
@@ -463,8 +466,9 @@ function parseNewMeta(pluginCode: string, filename: string) {
 
 const WRAPPER_AUTO_DEBUG_ENABLED = true;
 
-function wrapBetterDiscordPluginCode(pluginCode: string, filename: string) {
+function wrapBetterDiscordPluginCode(pluginCode: string, filename: string, pluginName: string) {
     let codeData = pluginCode;
+    codeData += `\nif (typeof module.exports !== "function") { module.workingTmp = eval("${pluginName}"); }`;
     const debugLine = "\ntry{" + codeData + "}catch(e){console.error(e);debugger;}";
     const additionalCode = [
         "const module = { exports: {} };",
@@ -473,6 +477,7 @@ function wrapBetterDiscordPluginCode(pluginCode: string, filename: string) {
         "const __filename=BdApi.Plugins.folder+`/" + filename + "`;",
         "const __dirname=BdApi.Plugins.folder;", // should this be set to `sourcePath`?
         "const DiscordNative={get clipboard() { return window.BdCompatLayer.fakeClipboard; }};",
+        "var process=require('process');", // I hate this
     ];
     codeData =
         "(()=>{" +

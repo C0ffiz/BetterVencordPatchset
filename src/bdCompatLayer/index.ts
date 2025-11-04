@@ -312,8 +312,11 @@ const thePlugin = {
                     return this.request_;
                 return undefined;
             },
-            events: {
-                EventEmitter: FakeEventEmitter,
+            get events() {
+                const Original = FakeEventEmitter;
+                const Copy = class extends Original { };
+                Object.defineProperty(Copy, "EventEmitter", { value: Copy });
+                return Copy;
             },
             electron: {},
             process: {
@@ -324,7 +327,8 @@ const thePlugin = {
                         const target = "/home/fake";
                         FSUtils.mkdirSyncRecursive(target);
                         return target;
-                    }
+                    },
+                    NODE_ENV: "production",
                 },
             },
         };
