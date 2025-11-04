@@ -41,6 +41,7 @@ import { compat_logger, FSUtils, getDeferred, reloadCompatLayer, simpleGET, ZIPU
 import { Backend, configureSingle, InMemory, MountConfiguration, fs as ZenFS_fs } from "@zenfs/core";
 import { RealFSClient, RealFs } from "real-fs-client";
 import { IndexedDB as ZenFS_IndexedDB, WebStorage as ZenFS_WebStorage } from "@zenfs/dom";
+import * as ZenFS_path from "@zenfs/core/path";
 
 const thePlugin = {
     name: PLUGIN_NAME,
@@ -173,10 +174,7 @@ const thePlugin = {
             async () => {
                 if (target.client && target.client instanceof RealFSClient) await target.client.ready;
                 ReImplementationObject.fs = ZenFS_fs;
-                const path = await (await fetch("https://cdn.jsdelivr.net/npm/path-browserify@1.0.1/index.js")).text();
-                const result = eval.call(window, "(()=>{const module = {};" + path + "return module.exports;})();\n//# sourceURL=betterDiscord://internal/path.js");
-                // ReImplementationObject.path = /*temp.require("path")*/;
-                ReImplementationObject.path = result;
+                ReImplementationObject.path = ZenFS_path;
                 if (Settings.plugins[this.name].safeMode == undefined || Settings.plugins[this.name].safeMode == false)
                     // @ts-ignore
                     windowBdCompatLayer.fsReadyPromise.resolve();
