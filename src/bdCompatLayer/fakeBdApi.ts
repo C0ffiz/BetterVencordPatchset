@@ -481,10 +481,9 @@ export const UIHolder = {
             extraReact = settings.extraReact || [],
         } = settings;
 
-        const moreReact: React.ReactElement[] = [];
+        const moreReact: React.ReactElement[] = [...extraReact];
 
-        moreReact.push(React.createElement(Forms.FormText, {}, content));
-        // moreReact.push(...extraReact) // IM ADDING MORE DIV POSSIBILITESS !!!!
+        moreReact.unshift(React.createElement(Forms.FormText, {}, content));
 
         // I dont know how anyone would find this useful but screw it yeah?
         // Someone will find it useful one day
@@ -503,9 +502,6 @@ export const UIHolder = {
         }
         );
         */
-        extraReact.forEach(reactElement => {
-            moreReact.push(reactElement);
-        });
 
         ModalAPI.openModal(props => React.createElement(ConfirmationModal, Object.assign({
             header: title,
