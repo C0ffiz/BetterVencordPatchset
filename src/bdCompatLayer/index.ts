@@ -43,6 +43,23 @@ import { RealFSClient, RealFs } from "real-fs-client";
 import { IndexedDB as ZenFS_IndexedDB, WebStorage as ZenFS_WebStorage } from "@zenfs/dom";
 import * as ZenFS_path from "@zenfs/core/path";
 
+async function checkCorsProxyUrlCsp() {
+    if (IS_WEB) return true;
+
+    const current = Settings.plugins[PLUGIN_NAME].corsProxyUrl ?? thePlugin.options.corsProxyUrl.default;
+    if (await VencordNative.csp.isDomainAllowed(current, ["connect-src"])) {
+        compat_logger.debug("CSP for CORS Proxy is allowed");
+        return true;
+    }
+
+    const res = await VencordNative.csp.requestAddOverride(current, ["connect-src"], "BD Compat Layer: CORS Proxy");
+    if (res === "ok") {
+        compat_logger.debug("CSP for CORS Proxy is allowed from now");
+        return true;
+    }
+    return false;
+}
+
 const thePlugin = {
     name: PLUGIN_NAME,
     description: "Converts BD plugins to run in Vencord",
@@ -352,7 +369,7 @@ const thePlugin = {
             };
         })();
 
-        const injectedAndPatched = new Promise<void>((resolve, reject) => {
+        const injectedAndPatched_ = new Promise<void>((resolve, reject) => {
             ReactUtils_filler.setup({ React: React });
             addDiscordModules(proxyUrl).then(DiscordModulesInjectorOutput => {
                 const DiscordModules = DiscordModulesInjectorOutput.output;
@@ -369,6 +386,16 @@ const thePlugin = {
                     resolve();
                 }, reject);
             }, reject);
+        });
+        const injectedAndPatched = new Promise((resolve, reject) => {
+            checkCorsProxyUrlCsp().then(result => {
+                if (!result) {
+                    compat_logger.error("CORS Proxy CSP rejected.");
+                    reject();
+                    return;
+                }
+                injectedAndPatched_.then(resolve, reject);
+            });
         });
 
         const fakeLoading = document.createElement("span");
