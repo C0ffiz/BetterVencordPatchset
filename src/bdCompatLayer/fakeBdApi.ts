@@ -23,7 +23,7 @@ const VenComponents = OptionComponentMap;
 import { OptionComponentMap } from "@components/settings/tabs/plugins/components";
 import { ModalAPI } from "@utils/modal";
 import { OptionType, PluginOptionBase, PluginOptionComponent, PluginOptionCustom, PluginOptionSelect, PluginOptionSlider } from "@utils/types";
-import { Forms, lodash, Text } from "@webpack/common";
+import { Forms, lodash, Text, React } from "@webpack/common";
 
 import { ColorPickerSettingComponent } from "./components/ColorPickerSetting";
 import { PLUGIN_NAME } from "./constants";
@@ -31,6 +31,7 @@ import { fetchWithCorsProxyFallback } from "./fakeStuff";
 import { AssembledBetterDiscordPlugin } from "./pluginConstructor";
 import { getModule as BdApi_getModule, monkeyPatch as BdApi_monkeyPatch, Patcher, ReactUtils_filler } from "./stuffFromBD";
 import { addLogger, compat_logger, createTextForm, docCreateElement, ObjectMerger } from "./utils";
+import { findLazy } from "@webpack";
 
 class PatcherWrapper {
     #label;
@@ -456,6 +457,8 @@ type SettingsType = {
 };
 
 const _ReactDOM_With_createRoot = {} as typeof Vencord.Webpack.Common.ReactDOM & { createRoot: typeof Vencord.Webpack.Common.createRoot; };
+const ConfirmationModal = findLazy(x => x.ConfirmModal).ConfirmModal;
+const ButtonProps = findLazy(x => x && x.Button && x.Button.Looks && x.Button.Colors).Button;
 
 export const UIHolder = {
     alert(title: string, content: any) {
@@ -470,14 +473,6 @@ export const UIHolder = {
         // uhmm.. aschtually waht is 4.
     },
     showConfirmationModal(title: string, content: any, settings: any = {}) {
-        // The stolen code from my beloved davyy has been removed. :(
-        const Colors = {
-            BRAND: getGlobalApi().findModuleByProps("colorBrand").colorBrand
-        };
-        const ConfirmationModal = getGlobalApi().Webpack.getModule(x => x.ConfirmModal).ConfirmModal;
-        const { openModal } = ModalAPI;
-        // const { openModal } = getGlobalApi().Webpack.getModule(x => x.closeModal && x.openModal && x.hasModalOpen);
-
         const {
             confirmText = settings.confirmText || "Confirm",
             cancelText = settings.cancelText || "Cancel",
@@ -488,14 +483,7 @@ export const UIHolder = {
 
         const moreReact: React.ReactElement[] = [];
 
-        const whiteTextStyle = {
-            color: "white",
-        };
-
-        const { React } = getGlobalApi();
-        const whiteTextContent = React.createElement("div", { style: whiteTextStyle }, content);
-
-        moreReact.push(whiteTextContent);
+        moreReact.push(React.createElement(Forms.FormText, {}, content));
         // moreReact.push(...extraReact) // IM ADDING MORE DIV POSSIBILITESS !!!!
 
         // I dont know how anyone would find this useful but screw it yeah?
@@ -519,9 +507,9 @@ export const UIHolder = {
             moreReact.push(reactElement);
         });
 
-        openModal(props => React.createElement(ConfirmationModal, Object.assign({
+        ModalAPI.openModal(props => React.createElement(ConfirmationModal, Object.assign({
             header: title,
-            confirmButtonColor: Colors.BRAND,
+            confirmButtonColor: ButtonProps.Colors.BRAND,
             confirmText: confirmText,
             cancelText: cancelText,
             onConfirm: onConfirm,
