@@ -23,7 +23,7 @@ const VenComponents = OptionComponentMap;
 import { OptionComponentMap } from "@components/settings/tabs/plugins/components";
 import { ModalAPI } from "@utils/modal";
 import { OptionType, PluginOptionBase, PluginOptionComponent, PluginOptionCustom, PluginOptionSelect, PluginOptionSlider } from "@utils/types";
-import { Forms, lodash, Text, React } from "@webpack/common";
+import { Forms, lodash, Text, React, Toasts } from "@webpack/common";
 
 import { ColorPickerSettingComponent } from "./components/ColorPickerSetting";
 import { PLUGIN_NAME } from "./constants";
@@ -460,6 +460,8 @@ const _ReactDOM_With_createRoot = {} as typeof Vencord.Webpack.Common.ReactDOM &
 const ConfirmationModal = findLazy(x => x.ConfirmModal).ConfirmModal;
 const ButtonProps = findLazy(x => x && x.Button && x.Button.Looks && x.Button.Colors).Button;
 
+const ToastTypeNumToName = (num: number) => Object.values(Toasts.Type)[num];
+
 export const UIHolder = {
     alert(title: string, content: any) {
         return this.showConfirmationModal(title, content, { cancelText: null });
@@ -468,9 +470,7 @@ export const UIHolder = {
         compat_logger.error(new Error("Not implemented."));
     },
     showToast(message, toastType = 1) {
-        const { createToast, showToast } = getGlobalApi().Webpack.getModule(x => x.createToast && x.showToast);
-        showToast(createToast(message || "Success !", [0, 1, 2, 3, 4, 5].includes(toastType) ? toastType : 1)); // showToast has more then 3 toast types?
-        // uhmm.. aschtually waht is 4.
+        Toasts.show(Toasts.create(message || "Success !", [0, 1, 2, 3, 4, 5].includes(toastType) ? ToastTypeNumToName(toastType) : ToastTypeNumToName(1)));
     },
     showConfirmationModal(title: string, content: any, settings: any = {}) {
         const {
