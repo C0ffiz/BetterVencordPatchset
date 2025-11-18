@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      diffparser:
+        specifier: ^2.0.1
+        version: 2.0.1
     devDependencies:
       '@types/react':
         specifier: ^19.2.2
@@ -84,6 +88,9 @@ packages:
 
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
+
+  diffparser@2.0.1:
+    resolution: {integrity: sha512-XBuCzzdLUBJzXTvbonNPv7+AhNkiUyhyiZBSrhKxKYcIXfAcPOVaINviC2vB+bfBa5EopW60CzkBjuwb3jdmiw==}
 
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
@@ -219,6 +226,8 @@ snapshots:
       ieee754: 1.2.1
 
   csstype@3.1.3: {}
+
+  diffparser@2.0.1: {}
 
   event-target-shim@5.0.1: {}
 

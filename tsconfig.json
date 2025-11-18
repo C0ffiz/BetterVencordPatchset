@@ -2,6 +2,7 @@
     "exclude": [
         "base",
         "dist",
+        "scripts",
     ],
     "compilerOptions": {
         "baseUrl": ".",
