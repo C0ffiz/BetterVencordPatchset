@@ -1,6 +1,6 @@
---- base/Vencord/scripts/build/common.mjs	2025-11-03 20:57:18.278304935 +0100
-+++ dist/Vencord/scripts/build/common.mjs	2025-11-03 23:56:04.750676047 +0100
-@@ -360,7 +360,6 @@
+--- base/Vencord/scripts/build/common.mjs	2025-12-07 17:20:51.495544529 +0100
++++ dist/Vencord/scripts/build/common.mjs	2025-12-07 17:25:13.511518434 +0100
+@@ -361,7 +361,6 @@
  const builtinModuleRegex = new RegExp(`^(node:)?(${escapedBuiltinModules})$`);
  
  export const commonRendererPlugins = [
