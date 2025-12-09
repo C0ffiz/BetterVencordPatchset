@@ -3,13 +3,26 @@ import path from "node:path";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 
-const parseDiff = (input: string): Array<{ to: string; chunks: Array<{ oldStart: number; changes: Array<{ type: 'add' | 'del' | 'normal'; content: string; }>; }>; }> => {
+type Chunk = {
+    changes: {
+        type: "normal" | "del" | "add",
+        content: string,
+    }[],
+    oldStart: number,
+};
+
+type File = {
+    to: string,
+    chunks: Chunk[],
+};
+
+const parseDiff = (input: string) => {
     if (!input || typeof input !== 'string') return [];
 
     const lines = input.split(/\r\n|\r|\n/);
-    const files = [];
-    let currentFile = null;
-    let currentChunk = null;
+    const files = [] as File[];
+    let currentFile = null as null | File;
+    let currentChunk = null as null | Chunk;
 
     const REGEX = {
         header: /^(diff\s|new\sfile|deleted\sfile|index\s)/,
@@ -21,7 +34,7 @@ const parseDiff = (input: string): Array<{ to: string; chunks: Array<{ oldStart:
         gitPrefix: /^[ab]\//
     };
 
-    const parsePath = (rawPath) => {
+    const parsePath = (rawPath: string) => {
         let path = rawPath.trim();
         const tabIndex = path.indexOf('\t');
         if (tabIndex > -1) path = path.substring(0, tabIndex);
