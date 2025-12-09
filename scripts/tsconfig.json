@@ -1,9 +1,8 @@
 {
-  "include": ["build.ts", "diffparser.d.ts"],
+  "include": ["build.ts"],
   "compilerOptions": {
-    "moduleResolution": "node10",
-    "esModuleInterop": true,
-    "lib": ["ES2020", "dom"],
-    "types": ["node"]
+    "module": "es2022",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM"]
   }
 }

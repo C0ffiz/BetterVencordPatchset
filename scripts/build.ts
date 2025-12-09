@@ -2,7 +2,81 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
-import parseDiff from "diffparser";
+
+const parseDiff = (input: string): Array<{ to: string; chunks: Array<{ oldStart: number; changes: Array<{ type: 'add' | 'del' | 'normal'; content: string; }>; }>; }> => {
+    if (!input || typeof input !== 'string') return [];
+
+    const lines = input.split(/\r\n|\r|\n/);
+    const files = [];
+    let currentFile = null;
+    let currentChunk = null;
+
+    const REGEX = {
+        header: /^(diff\s|new\sfile|deleted\sfile|index\s)/,
+        // +++ b/path/to/file
+        toFile: /^\+\+\+\s+(.*)$/,
+        // @@ -oldStart,oldLines +newStart,newLines @@
+        chunk: /^@@\s+-(\d+)(?:,\d+)?\s+\+(\d+)(?:,\d+)?\s+@@/,
+        // a/ and b/
+        gitPrefix: /^[ab]\//
+    };
+
+    const parsePath = (rawPath) => {
+        let path = rawPath.trim();
+        const tabIndex = path.indexOf('\t');
+        if (tabIndex > -1) path = path.substring(0, tabIndex);
+
+        return REGEX.gitPrefix.test(path) ? path.substring(2) : path;
+    };
+
+    for (const line of lines) {
+        if (REGEX.header.test(line)) {
+            currentFile = null;
+            currentChunk = null;
+            continue;
+        }
+
+        const toMatch = line.match(REGEX.toFile);
+        if (toMatch) {
+            currentFile = {
+                to: parsePath(toMatch[1]),
+                chunks: []
+            };
+            files.push(currentFile);
+            currentChunk = null;
+            continue;
+        }
+
+        const chunkMatch = line.match(REGEX.chunk);
+        if (chunkMatch) {
+            if (!currentFile) {
+                currentFile = { to: '/dev/null', chunks: [] };
+                files.push(currentFile);
+            }
+
+            currentChunk = {
+                oldStart: parseInt(chunkMatch[1], 10),
+                changes: []
+            };
+            currentFile.chunks.push(currentChunk);
+            continue;
+        }
+
+        if (currentChunk) {
+            if (line.startsWith('+')) {
+                currentChunk.changes.push({ type: 'add', content: line });
+            } else if (line.startsWith('-')) {
+                currentChunk.changes.push({ type: 'del', content: line });
+            } else if (line.startsWith(' ')) {
+                currentChunk.changes.push({ type: 'normal', content: line });
+            } else if (line.startsWith('\\')) {
+                currentChunk.changes.push({ type: 'normal', content: line });
+            }
+        }
+    }
+
+    return files;
+};
 
 const exec = promisify(execFile);
 
