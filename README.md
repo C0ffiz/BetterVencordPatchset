@@ -13,7 +13,7 @@ You can also use Deno v2 instead of Node.js, I like it more personally.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Davilarek/BetterVencordPatchset
+   git clone --recurse-submodules https://github.com/Davilarek/BetterVencordPatchset
    cd BetterVencordPatchset
    ```
 
