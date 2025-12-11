@@ -32,6 +32,7 @@ import { AssembledBetterDiscordPlugin } from "./pluginConstructor";
 import { getModule as BdApi_getModule, monkeyPatch as BdApi_monkeyPatch, Patcher, ReactUtils_filler } from "./stuffFromBD";
 import { addLogger, compat_logger, createTextForm, docCreateElement, ObjectMerger } from "./utils";
 import { findLazy } from "@webpack";
+import { BdApi_mapObject } from "./stuffFromBD_2";
 
 class PatcherWrapper {
     #label;
@@ -278,8 +279,16 @@ export const WebpackHolder = {
         // return result;
         return Vencord.Webpack.wreq.m;
     },
-    get getMangled() {
-        return Vencord.Webpack.mapMangledModule;
+    getMangled(f, m, opt = {}) {
+        const { raw = false, ...rest } = opt;
+        if (typeof f === "string" || f instanceof RegExp) {
+            f = WebpackHolder.Filters.bySource(f);
+        }
+        let module = typeof f === "number" ? Vencord.Webpack.wreq.c[f] : WebpackHolder.getModule(f, { raw, ...rest });
+        if (!module) return {};
+        if (raw) module = module.exports;
+
+        return BdApi_mapObject(module, m);
     },
     getWithKey(filter, options: { target?: any; } = {}) {
         const { target: opt_target = null, ...unrelated } = options;
