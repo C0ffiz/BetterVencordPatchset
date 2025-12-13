@@ -468,7 +468,7 @@ const WRAPPER_AUTO_DEBUG_ENABLED = true;
 
 function wrapBetterDiscordPluginCode(pluginCode: string, filename: string, pluginName: string) {
     let codeData = pluginCode;
-    codeData += `\nif (typeof module.exports !== "function") { module.workingTmp = eval("${pluginName}"); }`;
+    codeData += `\nif (typeof module.exports !== "function" && !("default" in module.exports)) { module.workingTmp = eval("${pluginName}"); }`;
     const debugLine = "\ntry{" + codeData + "}catch(e){console.error(e);debugger;}";
     const additionalCode = [
         "const module = { exports: {} };",

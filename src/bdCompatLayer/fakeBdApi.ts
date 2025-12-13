@@ -29,10 +29,24 @@ import { ColorPickerSettingComponent } from "./components/ColorPickerSetting";
 import { PLUGIN_NAME } from "./constants";
 import { fetchWithCorsProxyFallback } from "./fakeStuff";
 import { AssembledBetterDiscordPlugin } from "./pluginConstructor";
-import { getModule as BdApi_getModule, monkeyPatch as BdApi_monkeyPatch, Patcher, ReactUtils_filler } from "./stuffFromBD";
+import { getModule as BdApi_getModule, monkeyPatch as BdApi_monkeyPatch, Patcher, ReactUtils_filler, wrapFilter } from "./stuffFromBD";
 import { addLogger, compat_logger, createTextForm, docCreateElement, ObjectMerger } from "./utils";
-import { findLazy } from "@webpack";
+import { findLazy, fluxStores } from "@webpack";
 import { BdApi_mapObject } from "./stuffFromBD_2";
+
+function getDefaultKey(module: any) {
+    if (!module.exports) return undefined;
+    if (module.exports.__esModule && module.exports.default) {
+        return "default";
+    }
+    if (module.exports.Z) {
+        return "Z";
+    }
+    if (module.exports.ZP) {
+        return "ZP";
+    }
+    return undefined;
+}
 
 class PatcherWrapper {
     #label;
@@ -374,15 +388,95 @@ export const WebpackHolder = {
             },
         });
     },
-    getBulk(...mapping: { filter: (m: any) => unknown, searchExports?: boolean }[]) {
-        const len = mapping.length;
-        const result = new Array(len);
-        for (let i = 0; i < len; i++) {
-            const { filter, ...opts } = mapping[i];
-            result[i] = WebpackHolder.getModule(filter, opts)
+    getBulk(...queries: any[]) {
+        const returnedModules = Array(queries.length);
+
+        const shouldExitEarly = queries.every((m: any) => !m.all);
+        const shouldExit = () => shouldExitEarly && queries.every((query: any, index: number) => !query.all && index in returnedModules);
+
+        if (queries.length === 0) return returnedModules;
+
+        const webpackModules = Object.values(Vencord.Webpack.wreq.c);
+        webpack: for (let i = 0; i < webpackModules.length; i++) {
+            const module = webpackModules[i];
+
+            queries: for (let index = 0; index < queries.length; index++) {
+                const { filter: f_filter, all = false, defaultExport = true, searchExports = false, searchDefault = true, raw = false, map, fatal } = queries[index];
+
+                const filter = wrapFilter(f_filter);
+                if (!all && index in returnedModules) {
+                    continue;
+                }
+
+                if (filter(module.exports, module, module.id)) {
+                    let trueItem = raw ? module : module.exports;
+                    if (map) {
+                        trueItem = BdApi_mapObject(raw ? module.exports : trueItem, map);
+                    }
+
+                    if (!all) {
+                        returnedModules[index] = trueItem;
+                        if (shouldExit()) break webpack;
+                        continue;
+                    }
+
+                    if (!returnedModules[index]) returnedModules[index] = [];
+                    returnedModules[index].push(trueItem);
+                }
+
+                let defaultKey: string | undefined;
+                const exportKeys: string[] = [];
+                if (searchExports) exportKeys.push(...Object.keys(module.exports));
+                else if (searchDefault && (defaultKey = getDefaultKey(module))) exportKeys.push(defaultKey);
+
+                for (const key of exportKeys) {
+                    const exported = module.exports[key];
+
+                    if (filter(exported, module, module.id)) {
+                        let value: any;
+                        if (!defaultExport && defaultKey === key) {
+                            value = raw ? module : module.exports;
+                            if (map) value = BdApi_mapObject(module.exports, map);
+                        } else {
+                            value = raw ? (map ? module : exported) : exported;
+                            if (map) value = BdApi_mapObject(raw ? module.exports : exported, map);
+                        }
+
+                        if (!all) {
+                            returnedModules[index] = value;
+                            if (shouldExit()) break webpack;
+                            continue queries;
+                        }
+
+                        if (!returnedModules[index]) returnedModules[index] = [];
+                        returnedModules[index].push(value);
+                    }
+                }
+            }
         }
-        return result;
+
+        for (let index = 0; index < queries.length; index++) {
+            const query = queries[index];
+            const exists = index in returnedModules;
+
+            if (query.fatal && !exists) {
+                if (query.all && (!Array.isArray(returnedModules[index]) || returnedModules[index].length === 0)) {
+                    throw new Error(`Failed to find modules for query ${index}`);
+                }
+                if (!exists) throw new Error(`Failed to find module for query ${index}`);
+            }
+
+            if (!exists) {
+                returnedModules[index] = {};
+            }
+        }
+        return returnedModules;
     },
+    Stores: new Proxy({}, {
+        get(t, p, r) {
+            return fluxStores.get(p.toString());
+        },
+    }),
 };
 
 export const DataHolder = {

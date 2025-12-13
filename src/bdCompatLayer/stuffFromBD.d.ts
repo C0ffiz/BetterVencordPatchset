@@ -18,6 +18,7 @@
 
 export declare function monkeyPatch(what: any, methodName: any, options: any);
 export declare function getModule(filter: any, options?: any);
+export declare function wrapFilter(filter: any);
 export declare const ReactUtils_filler: {
     setup: (DiscordModules: any) => void;
     wrapElement: (element: HTMLElement) => void;

@@ -389,4 +389,4 @@ const ReactUtils_filler = {
     }
 }
 
-export { getModule, monkeyPatch, Patcher, ReactUtils_filler };
+export { getModule, monkeyPatch, Patcher, ReactUtils_filler, wrapFilter };
