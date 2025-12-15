@@ -25,7 +25,7 @@ You can also use Deno v2 instead of Node.js, I like it more personally.
 3. Build BetterVencord:
    ```bash
    # Using tsx (if you only have pnpm):
-   pnpx tsx scripts/build.ts
+   pnpm dlx tsx scripts/build.ts
 
    # Using Deno (if you have Deno installed):
    deno task build:deno
