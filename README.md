@@ -1,7 +1,7 @@
 # BetterVencord
 
-BetterVencord is a patchset for Vencord that adds BetterDiscord compatibility.
-It allows BetterDiscord plugins to run in Vencord.
+BetterVencord is a patchset for Vencord (and now Equicord) that adds BetterDiscord compatibility.
+It allows BetterDiscord plugins to run in Vencord/Equicord.
 
 ## Installation
 
@@ -23,6 +23,7 @@ You can also use Deno v2 instead of Node.js, I like it more personally.
    ```
 
 3. Build BetterVencord:
+   For Vencord:
    ```bash
    # Using tsx (if you only have pnpm):
    pnpm dlx tsx scripts/build.ts
@@ -30,10 +31,24 @@ You can also use Deno v2 instead of Node.js, I like it more personally.
    # Using Deno (if you have Deno installed):
    deno task build:deno
    ```
+   For Equicord:
+   ```bash
+   # Using tsx (if you only have pnpm):
+   pnpm dlx tsx scripts/build.ts --equicord
+
+   # Using Deno (if you have Deno installed):
+   deno task buildEquicord:deno
+   ```
 
 4. Inject into Discord:
+   For Vencord:
    ```bash
    cd dist/Vencord
+   pnpm inject
+   ```
+   For Equicord:
+   ```bash
+   cd dist/Equicord
    pnpm inject
    ```
 

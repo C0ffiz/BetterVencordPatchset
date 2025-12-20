@@ -252,6 +252,10 @@ const buildTypeToPath = (forBuild: BuildTypes) => {
     }
 };
 
+if (process.argv.includes("--equicord")) {
+    process.env.EQUICORD = "1";
+}
+
 const buildType = process.env.EQUICORD === "1" ? BuildTypes.EQUICORD : BuildTypes.VENCORD;
 
 async function run() {
