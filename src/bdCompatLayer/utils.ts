@@ -103,10 +103,10 @@ export function evalInContext(js, context) {
     }.call(context);
 }
 
-export function readdirPromise(filename) {
+export function readdirPromise(filename: string) {
     const fs = window.require("fs");
-    return new Promise((resolve, reject) => {
-        fs.readdir(filename, (err, files) => {
+    return new Promise<string[]>((resolve, reject) => {
+        fs.readdir(filename, (err, files: string[]) => {
             if (err)
                 reject(err);
             else

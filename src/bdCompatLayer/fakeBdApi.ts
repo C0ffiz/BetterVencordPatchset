@@ -23,7 +23,7 @@ const VenComponents = OptionComponentMap;
 import { OptionComponentMap } from "@components/settings/tabs/plugins/components";
 import { ModalAPI } from "@utils/modal";
 import { OptionType, PluginOptionBase, PluginOptionComponent, PluginOptionCustom, PluginOptionSelect, PluginOptionSlider } from "@utils/types";
-import { Forms, lodash, Text, React, Toasts } from "@webpack/common";
+import { Forms, lodash, Text, React, Toasts, Button } from "@webpack/common";
 
 import { ColorPickerSettingComponent } from "./components/ColorPickerSetting";
 import { PLUGIN_NAME } from "./constants";
@@ -561,7 +561,8 @@ type SettingsType = {
 
 const _ReactDOM_With_createRoot = {} as typeof Vencord.Webpack.Common.ReactDOM & { createRoot: typeof Vencord.Webpack.Common.createRoot; };
 const ConfirmationModal = findLazy(x => x.ConfirmModal).ConfirmModal;
-const ButtonProps = findLazy(x => x && x.Button && x.Button.Looks && x.Button.Colors).Button;
+// const ButtonProps = findLazy(x => x && x.Button && x.Button.Looks && x.Button.Colors).Button;
+const ButtonProps = Button;
 
 const ToastTypeNumToName = (num: number) => Object.values(Toasts.Type)[num];
 

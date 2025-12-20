@@ -16,129 +16,131 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { React, Text, useState } from "@webpack/common";
+import { classNameFactory } from "@api/Styles";
+import { BaseText } from "@components/BaseText";
+import { FolderIcon } from "@components/Icons";
+import { React } from "@webpack/common";
+import { ComponentPropsWithoutRef } from "react";
 
-import { TransparentButton } from "./components/TransparentButton";
-
-interface TreeNode {
+export interface TreeItem<T = any> {
     id: string;
     label: string;
-    expanded: boolean;
-    expandable?: boolean,
-    fetchChildren: () => Promise<TreeNode[]>;
-    children?: TreeNode[];
-    createExpanded?: boolean;
+    isDirectory?: boolean;
+    children?: TreeItem<T>[];
+    expanded?: boolean;
+    selected?: boolean;
+    metadata?: T;
 }
 
-interface TreeViewProps {
-    data: TreeNode[];
-    selectedNode: string;
-    selectNode: Function;
-    onContextMenu: Function;
+type MutedBaseTextProps = ComponentPropsWithoutRef<typeof BaseText>;
+
+const MutedBaseText = ({ children, ...rest }: MutedBaseTextProps) => {
+    return (
+        <BaseText
+            {...rest}
+            style={{ color: "var(--text-muted)" }}
+        >
+            {children}
+        </BaseText>
+    );
+};
+
+interface TreeViewProps<T = any> {
+    items: TreeItem<T>[];
+    onToggleExpand?: (item: TreeItem<T>) => void;
+    onSelect?: (item: TreeItem<T>) => void;
+    renderIcon?: (item: TreeItem<T>) => React.ReactNode;
+    className?: string;
+    loadingPaths?: Set<string>;
+    headerComponent: React.ReactNode;
 }
+const cl = classNameFactory("vc-bdcompat-fs-");
 
-interface NodeState {
-    id: string;
-    expanded: boolean;
-}
-
-export const nodeStateStore = {};
-
-const TreeNodeItem: React.FC<{ node: TreeNode, selectedNode: string, selectNode: Function, onContextMenu: Function; }> = ({ node, selectedNode, selectNode, onContextMenu }) => {
-    const [expanded, setExpanded] = useState(node.expanded);
-    const [loading, setLoading] = useState(false);
-
-    const toggleExpand = async () => {
-        if (!expanded) {
-            setLoading(true);
-            const children = await node.fetchChildren();
-            node.children = children;
-            setLoading(false);
+export function TreeView<T>({
+    items,
+    onToggleExpand,
+    onSelect,
+    renderIcon,
+    className = "",
+    loadingPaths = new Set(),
+    headerComponent,
+}: TreeViewProps<T>) {
+    const defaultRenderIcon = (item: TreeItem<T>) => {
+        if (item.isDirectory) {
+            return <FolderIcon width={16} height={16} />;
         }
-        node.expanded = !expanded;
-        // nodeStateStore[node.id] = {
-        //     id: node.id,
-        //     expanded: node.expanded,
-        // } as NodeState;
-        setExpanded(!expanded);
+        return <img src="/assets/94660b205108a49f.svg" width={16} height={16} />;
     };
-    // if (node.createExpanded === true && node.expanded === true) {
-    //     setExpanded(false);
-    //     toggleExpand();
-    //     node.createExpanded = false;
-    // }
 
-    return (
-        <div>
-            {/* <div onClick={toggleExpand}>
-                {expanded ? "▼" : "►"} {node.label}
-            </div> */}
-            {
-                node.expandable === false ?
-                    <div style={{ height: "16px" }}></div>
-                    :
-                    <Text onClick={toggleExpand}>
-                        {expanded ? "▼" : "►"}
-                    </Text>
-            }
-            {/* <TransparentButton clickTarget={node} clicked={selectedNode === node.id} onClick={selectNode}> */}
-            <TransparentButton isToggle={false} onClick={toggleExpand} onContextMenu={ev => {
-                { /* <TransparentButton clickTarget={node} clicked={selectedNode === node.id} onClick={selectNode} onContextMenu={ev => { */ }
-                selectNode(node);
-                onContextMenu(ev);
-            }}>
-                {/* <TransparentButton clickTarget={node} clicked={selectedNode === node.id} onClick={console.log}> */}
-                <Text style={{
-                    marginLeft: "20px",
-                    fontSize: "1rem",
-                    color: "white",
-                    fontWeight: "bold",
-                    padding: "5px",
-                    borderRadius: "4px",
-                    outline: "3px solid #f0f0f0",
-                    cursor: "pointer",
-                }}>
-                    {node.label}
-                </Text>
-            </TransparentButton>
-            {expanded && loading && <div>Loading...</div>}
-            {expanded && !loading && node.children && (
-                <div style={{ marginLeft: "20px" }}>
-                    {node.children.map(childNode => (
-                        <TreeNodeItem key={childNode.id} node={childNode} selectedNode={selectedNode} selectNode={selectNode} onContextMenu={onContextMenu} />
-                    ))}
+    const itemIcon = renderIcon || defaultRenderIcon;
+
+    const renderItem = (item: TreeItem<T>, level: number = 0) => {
+        const isExpanded = !!item.expanded;
+        const isLoading = loadingPaths.has(item.id);
+        const hasChildren = item.children && item.children.length > 0;
+
+        return (
+            <React.Fragment key={item.id}>
+                <div
+                    className={`${cl("tree-item")} ${item.isDirectory ? cl("directory") : ""} ${item.selected ? cl("active") : ""}`}
+                    style={{ paddingLeft: `${level * 16 + 8}px` }}
+                >
+                    {item.isDirectory ? (
+                        <div
+                            className={cl("folder-row")}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleExpand?.(item);
+                            }}
+                        >
+                            <span className={cl("folder-toggle")}>
+                                <MutedBaseText size="sm">{isLoading ? (
+                                    "Loading"
+                                ) : (
+                                    isExpanded ? "\\/" : hasChildren || item.children !== undefined ? ">" : "_"
+                                )}</MutedBaseText>
+                            </span>
+                            {itemIcon(item)}
+                            <span
+                                className={cl("item-name")}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSelect?.(item);
+                                }}
+                            >
+                                <BaseText>{item.label}</BaseText>
+                            </span>
+                        </div>
+                    ) : (
+                        <div
+                            className={cl("file-row")}
+                            onClick={() => onSelect?.(item)}
+                        >
+                            <span className={cl("file-icon")}>
+                                {itemIcon(item)}
+                            </span>
+                            <span className={cl("item-name")}><BaseText>{item.label}</BaseText></span>
+                        </div>
+                    )}
                 </div>
-            )}
-        </div>
-    );
-};
 
-const TreeView: React.FC<TreeViewProps> = ({ data, selectedNode, selectNode, onContextMenu }) => {
+                {item.isDirectory && isExpanded && item.children && (
+                    <div className={cl("children-container")}>
+                        {item.children.map(child => renderItem(child, level + 1))}
+                    </div>
+                )}
+            </React.Fragment>
+        );
+    };
+
     return (
-        <div>
-            {data.map(node => (
-                <TreeNodeItem key={node.id} node={node} selectedNode={selectedNode} selectNode={selectNode} onContextMenu={onContextMenu} />
-            ))}
+        <div className={`${cl("tree-view")} ${className}`}>
+            <div className={cl("tree-header")}>
+                {headerComponent}
+            </div>
+            <div className={cl("tree-content")}>
+                {items.map(item => renderItem(item))}
+            </div>
         </div>
     );
-};
-
-export default TreeView;
-export {
-    TreeNode,
-};
-export function findInTree(root: TreeNode, filter: (x: TreeNode) => boolean): TreeNode | null {
-    if (!root) return null;
-
-    if (filter(root)) {
-        return root as TreeNode;
-    } else {
-        if (root.children)
-            for (const child of root.children) {
-                const result = findInTree(child, filter);
-                if (result) return result as TreeNode;
-            }
-    }
-
-    return null;
 }

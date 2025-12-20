@@ -447,8 +447,6 @@ const thePlugin = {
         //         return;
         //     clearInterval(checkInterval);
         Promise.all([windowBdCompatLayer.fsReadyPromise.promise, injectedAndPatched]).then(() => {
-            // getGlobalApi().DOM.addStyle("bd-compat-layer-stuff", '.bd-compat-setting > div > h2 { display: none; } .bd-compat-setting label { height: 0px; width: 0px; } .bd-compat-setting div[class^="labelRow_"] { height: 0px; }');
-            getGlobalApi().DOM.addStyle("bd-compat-layer-stuff", ".bd-compat-setting .vc-plugins-setting-title { display: none; }");
             windowBdCompatLayer.Router?.listeners.add(windowBdCompatLayer.mainRouterListener);
             const observer = new MutationObserver(mutations => mutations.forEach(m => window.GeneratedPlugins.forEach(p => BdApiReImplementation.Plugins.isEnabled(p.name) && p.instance.observer?.(m))));
             observer.observe(document, {
@@ -580,6 +578,223 @@ const thePlugin = {
                 background: transparent;
             }
         `);
+        // BdApiReImplementation.DOM.addStyle("bd-compat-layer-stuff", '.bd-compat-setting > div > h2 { display: none; } .bd-compat-setting label { height: 0px; width: 0px; } .bd-compat-setting div[class^="labelRow_"] { height: 0px; }');
+        BdApiReImplementation.DOM.addStyle("bd-compat-layer-stuff", ".bd-compat-setting .vc-plugins-setting-title { display: none; }");
+        BdApiReImplementation.DOM.addStyle("bd-compat-layer-fs", `
+            .vc-bdcompat-fs-explorer-container {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                border-radius: 0.5rem;
+                overflow: hidden;
+            }
+
+            .vc-bdcompat-fs-toolbar {
+                display: flex;
+                align-items: center;
+                padding: 0.5rem 0.75rem;
+                gap: 0.75rem;
+            }
+
+            .vc-bdcompat-fs-nav-buttons {
+                display: flex;
+                gap: 0.25rem;
+            }
+
+            .vc-bdcompat-fs-address-bar {
+                display: flex;
+                align-items: center;
+                flex: 1;
+                padding: 0.25rem 0.5rem;
+                border-radius: 0.25rem;
+            }
+
+            .vc-bdcompat-fs-address-label {
+                margin-right: 0.5rem;
+            }
+
+            .vc-bdcompat-fs-breadcrumb {
+                cursor: pointer;
+            }
+
+            .vc-bdcompat-fs-breadcrumb-separator {
+                margin: 0 0.25em;
+            }
+
+            .vc-bdcompat-fs-content-container {
+                display: flex;
+                flex: 1;
+                min-height: 0;
+                overflow: hidden;
+            }
+
+            .vc-bdcompat-fs-sidebar {
+                width: 7rem;
+                display: flex;
+                flex-direction: column;
+                transition: width 0.2s ease;
+            }
+
+            .vc-bdcompat-fs-sidebar-collapsed {
+                width: 2.5rem;
+            }
+
+            .vc-bdcompat-fs-tree-container {
+                flex: 1;
+                padding: 0.75rem;
+                overflow-y: auto;
+            }
+
+            .vc-bdcompat-fs-main-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            .vc-bdcompat-fs-sort-controls {
+                display: flex;
+                align-items: center;
+                padding: 0.5rem 1.5rem;
+                gap: 0.75rem;
+                font-size: 0.875rem;
+            }
+
+            .vc-bdcompat-fs-sort-button {
+                padding: 0.25rem 0.5rem;
+            }
+
+            .vc-bdcompat-fs-file-list {
+                flex: 1;
+                overflow: auto;
+                padding: 0 0.75rem 0.75rem;
+            }
+
+            .vc-bdcompat-fs-loading,
+            .vc-bdcompat-fs-empty-state {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                padding: 2rem;
+                color: var(--text-muted);
+                text-align: center;
+                gap: 0.75rem;
+            }
+
+            .vc-bdcompat-fs-empty-state svg {
+                color: var(--text-muted);
+                opacity: 0.7;
+            }
+
+            .vc-bdcompat-fs-file-table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
+
+            .vc-bdcompat-fs-file-table th,
+            .vc-bdcompat-fs-file-table td {
+                text-align: left;
+                padding: 0.5rem 0.75rem;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                box-sizing: border-box;
+            }
+
+            .vc-bdcompat-fs-file-table tr {
+                display: table-row;
+            }
+
+            .vc-bdcompat-fs-file-table td,
+            .vc-bdcompat-fs-file-table th {
+                display: table-cell;
+            }
+
+            .vc-bdcompat-fs-file-table td {
+                vertical-align: middle;
+            }
+
+            .vc-bdcompat-fs-file-row {
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+            }
+
+            .vc-bdcompat-fs-file-name {
+                display: flex;
+                align-items: center;
+                gap: 0.5em;
+            }
+
+            .vc-bdcompat-fs-file-name svg {
+                color: var(--text-muted);
+                flex-shrink: 0;
+            }
+
+            .vc-bdcompat-fs-status-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.25rem 0.75rem;
+            }
+
+            .vc-bdcompat-fs-explorer-card {
+                margin-top: 1rem;
+                overflow: hidden;
+            }
+
+            .vc-bdcompat-fs-tree-header {
+                padding: 0.5rem 0.75rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .vc-bdcompat-fs-tree-content {
+                overflow-y: auto;
+                padding: 0 0.25rem;
+            }
+
+            .vc-bdcompat-fs-tree-item {
+                padding: 0.125rem 0;
+                border-radius: 0.25rem;
+            }
+
+            .vc-bdcompat-fs-folder-row,
+            .vc-bdcompat-fs-file-row {
+                display: flex;
+                align-items: center;
+                padding: 0.25rem 0.5rem;
+                cursor: pointer;
+                color: var(--text-muted);
+            }
+
+            .vc-bdcompat-fs-folder-toggle {
+                width: 1rem;
+                margin-right: 0.25rem;
+                display: inline-block;
+                text-align: center;
+                flex-shrink: 0;
+            }
+
+            .vc-bdcompat-fs-file-icon {
+                margin-right: 0.375rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .vc-bdcompat-fs-item-name {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                flex: 1;
+            }
+
+            .vc-bdcompat-fs-children-container {
+                margin-left: 1rem;
+            }
+        `);
     },
     async stop() {
         compat_logger.warn("Disabling observer...");
@@ -593,6 +808,7 @@ const thePlugin = {
         compat_logger.warn("Removing added css...");
         getGlobalApi().DOM.removeStyle("OwOStylesOwO");
         getGlobalApi().DOM.removeStyle("bd-compat-layer-stuff");
+        getGlobalApi().DOM.removeStyle("bd-compat-layer-fs");
         compat_logger.warn("Removing settings tab...");
         unInjectSettingsTab();
         // console.warn("Freeing blobs...");
