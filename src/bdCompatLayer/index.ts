@@ -170,6 +170,9 @@ const thePlugin = {
             browserFSSetting: {},
             client: null as RealFSClient | null,
         }; // because "let" sucks
+        const status = {
+            setup: getDeferred<void>(),
+        };
         if (Settings.plugins[this.name].useRealFsInstead === true) {
             target.client = new RealFSClient("localhost:8000/api/v1/ws"); // TODO: add option to change this
             target.browserFSSetting = {
@@ -177,17 +180,41 @@ const thePlugin = {
                 sync: InMemory,
                 client: target.client,
             };
+            status.setup.resolve(); // TODO: maybe make this wait for client.ready?
         } else if (Settings.plugins[this.name].useIndexedDBInstead === true) {
+            const storeName = "VirtualFS_v2";
             target.browserFSSetting = {
                 backend: ZenFS_IndexedDB,
-                storeName: "VirtualFS",
+                storeName: storeName,
             };
+            /*      
+            const setup = async () => {
+                const dbs = await indexedDB.databases();
+                const oldDb = dbs.find(x => x.name === storeName);
+                if (oldDb && oldDb.version < 2) {
+                    const trx = indexedDB.open(storeName, oldDb.version + 1);
+                    trx.onsuccess = (ev) => {
+                        console.log("Open success", ev);
+                        trx.result.deleteObjectStore() // TODO: migrate? maybe
+                    };
+                    trx.onupgradeneeded = (ev) => {
+                        console.log("Upgrade success", ev);
+                    }
+                    trx.onerror = (ev) => {
+                        console.log("Open error", ev);
+                    }
+                }
+            };
+            setup().then(status.setup.resolve, status.setup.reject);
+            */
+            status.setup.resolve();
         } else {
             target.browserFSSetting = {
                 backend: ZenFS_WebStorage, storage: Vencord.Util.localStorage,
             };
+            status.setup.resolve();
         }
-        configureSingle(target.browserFSSetting as MountConfiguration<Backend>).then(
+        Promise.all([status.setup.promise, configureSingle(target.browserFSSetting as MountConfiguration<Backend>)]).then(
             async () => {
                 if (target.client && target.client instanceof RealFSClient) await target.client.ready;
                 ReImplementationObject.fs = ZenFS_fs;
