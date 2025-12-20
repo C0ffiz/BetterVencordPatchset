@@ -151,9 +151,9 @@ async function readPatch(file: string) {
     return parseDiff(text);
 }
 
-async function applyParsedPatch(root: string, patches: ReturnType<typeof parseDiff>) {
+async function applyParsedPatch(root: string, patches: ReturnType<typeof parseDiff>, workDir: string) {
     for (const p of patches) {
-        const filePath = path.join(root, p.to);
+        const filePath = path.join(root, p.to.replace("dist/Vencord", "dist/" + workDir)); // TODO: maybe don't depend on p.to blindly?
         let original = "";
 
         try {
@@ -188,6 +188,72 @@ async function gitHash(dir: string) {
     return stdout.trim();
 }
 
+enum BuildTypes {
+    UNIVERSAL,
+    VENCORD,
+    EQUICORD,
+};
+
+type PatchKind = {
+    targetType: BuildTypes;
+    file: string;
+    targetFile: string;
+};
+
+const patches = [
+    // Vencord Specific
+    {
+        file: "src/patch-webpack.patch",
+        targetFile: "src/webpack/patchWebpack.ts",
+        targetType: BuildTypes.VENCORD,
+    },
+    {
+        file: "src/patch-package_json.patch",
+        targetFile: "package.json",
+        targetType: BuildTypes.VENCORD,
+    },
+    // Universal
+    {
+        file: "src/patch-csp.patch",
+        targetFile: "src/main/csp/index.ts",
+        targetType: BuildTypes.UNIVERSAL,
+    },
+    {
+        file: "src/patch-banImportPlugin.patch",
+        targetFile: "scripts/build/common.mjs",
+        targetType: BuildTypes.UNIVERSAL,
+    },
+    // Equicord Specific
+    {
+        file: "src/equicord/patch-webpack.patch",
+        targetFile: "src/webpack/patchWebpack.ts",
+        targetType: BuildTypes.EQUICORD,
+    },
+    {
+        file: "src/equicord/patch-package_json.patch",
+        targetFile: "package.json",
+        targetType: BuildTypes.EQUICORD,
+    },
+] as PatchKind[];
+
+const selectPatch = (targetFile: string, forBuild: BuildTypes) => {
+    const patch = patches.find(x => x.targetFile === targetFile && x.targetType === forBuild) ?? patches.find(x => x.targetFile === targetFile && x.targetType === BuildTypes.UNIVERSAL);
+    return patch;
+};
+
+const buildTypeToPath = (forBuild: BuildTypes) => {
+    switch (forBuild) {
+        case BuildTypes.VENCORD:
+            return "Vencord";
+        case BuildTypes.EQUICORD:
+            return "Equicord";
+        default:
+            throw new Error("impossible");
+    }
+};
+
+const buildType = process.env.EQUICORD === "1" ? BuildTypes.EQUICORD : BuildTypes.VENCORD;
+
 async function run() {
     await ensurePnpm();
 
@@ -195,8 +261,9 @@ async function run() {
     await new Promise(r => setTimeout(r, 5000));
 
     const builderHash = await gitHash(".");
-    const baseDir = path.resolve("base/Vencord");
-    const distDir = path.resolve("dist/Vencord");
+    const workDir = buildTypeToPath(buildType);
+    const baseDir = path.resolve("base/" + workDir);
+    const distDir = path.resolve("dist/" + workDir);
 
     await safeRmdir("./dist");
     await fs.mkdir("./dist");
@@ -204,19 +271,14 @@ async function run() {
 
     const baseHash = await gitHash(baseDir);
 
-    const patchTargets = [
-        { file: "src/patch-webpack.patch", target: "src/webpack/patchWebpack.ts" },
-        { file: "src/patch-csp.patch", target: "src/main/csp/index.ts" },
-        { file: "src/patch-package_json.patch", target: "package.json" },
-        { file: "src/patch-banImportPlugin.patch", target: "scripts/build/common.mjs" }
-    ];
+    const patchTargets = patches.map(x => x.targetFile).filter((x, i, a) => a.indexOf(x) == i).map(x => selectPatch(x, buildType));
 
     for (const item of patchTargets) {
         const diffParsed = await readPatch(item.file);
         try {
-            await applyParsedPatch(".", diffParsed);
+            await applyParsedPatch(".", diffParsed, workDir);
         } catch (e) {
-            throw new Error(`Patch failed for ${item.target}: ${(e as Error).message}`);
+            throw new Error(`Patch failed for ${item.targetFile}: ${(e as Error).message}`);
         }
     }
 
@@ -227,6 +289,7 @@ async function run() {
 
     await execWithInheritedStdio("pnpm", ["i"], { cwd: distDir });
     process.env.VENCORD_HASH = `${baseHash} (BetterVencord patchset built by ${builderHash})`;
+    process.env.EQUICORD_HASH = process.env.VENCORD_HASH;
 
     await execWithInheritedStdio("pnpm", ["build", "--standalone"], { cwd: distDir });
     await execWithInheritedStdio("pnpm", ["buildWeb"], { cwd: distDir });
