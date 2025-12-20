@@ -36,6 +36,7 @@ import { ComponentPropsWithoutRef } from "react";
 
 type SettingsPlugin = Plugin & {
     customSections: ((ID: Record<string, unknown>) => any)[];
+    customEntries: any[];
 };
 
 const TabName = "Virtual Filesystem";
@@ -707,17 +708,29 @@ function makeTab() {
 
 function createFilesSystemViewTab(ID: Record<string, unknown>) {
     return {
-        section: "VencordBDCompatFS", // workaround
+        section: `${typeof Vencord.Util.isEquicordGuild === "undefined" ? "Vencord" : "Equicord"}BDCompatFS`, // workaround
         label: TabName,
         element: wrapTab(makeTab, TabName),
         className: "bv-fs-view",
     };
 }
 
+function createFilesSystemViewTabV2() {
+    return {
+        title: TabName,
+        Component: wrapTab(makeTab, TabName),
+        key: `${typeof Vencord.Util.isEquicordGuild === "undefined" ? "vencord" : "equicord"}_bv_fs_view`,
+        Icon: FolderIcon,
+    };
+}
+
 export function injectSettingsTabs() {
     const settingsPlugin = Vencord.Plugins.plugins.Settings as SettingsPlugin;
-    const { customSections } = settingsPlugin;
+    const { customSections, customEntries } = settingsPlugin;
     customSections.push(createFilesSystemViewTab);
+    if (customEntries) {
+        customEntries.push(createFilesSystemViewTabV2());
+    }
 }
 
 export function unInjectSettingsTab() {
