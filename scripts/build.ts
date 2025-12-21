@@ -287,6 +287,8 @@ async function run() {
     }
 
     await copyDir("src/bdCompatLayer", path.join(distDir, "src/plugins/bdCompatLayer"));
+    console.log("now copying user plugins");
+    await copyDir("src/userplugins", path.join(distDir, "src/userplugins"));
 
     await exec("git", ["init"], { cwd: distDir });
     await exec("git", ["remote", "add", "origin", "https://github.com/Vendicated/Vencord"], { cwd: distDir });
