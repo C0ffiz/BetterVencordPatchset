@@ -543,7 +543,7 @@ function FileExplorer() {
             </div>
 
             <div className={cl("content-container")}>
-                <div className={`${cl("sidebar")} ${sidebarCollapsed ? cl("sidebar-collapsed") : ""}`}>
+                <div style={{display:"none"}} className={`${cl("sidebar")} ${sidebarCollapsed ? cl("sidebar-collapsed") : ""}`}>
                     <Button
                         size={"small"}
                         variant="none"
