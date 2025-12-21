@@ -95,7 +95,7 @@ const exec = promisify(execFile);
 
 const execWithInheritedStdio = (command: string, args: string[], options: any = {}) => {
     return new Promise<void>((resolve, reject) => {
-        const child = spawn(command, args, { stdio: "inherit", ...options });
+        const child = spawn(command, args, { stdio: "inherit", shell: true, ...options });
         child.on("close", (code) => {
             if (code === 0) {
                 resolve();
