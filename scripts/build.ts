@@ -118,8 +118,11 @@ async function fileExists(p: string) {
 
 async function ensurePnpm() {
     try {
-        await exec("pnpm", ["--version"]);
-    } catch {
+        console.log("checking pnpm...");
+        await execWithInheritedStdio("pnpm", ["--version"]);
+        console.log("done");
+    } catch (err) {
+        console.error( err instanceof Error ? err.stack || err.message : String(err));
         throw new Error("pnpm not installed");
     }
 }
