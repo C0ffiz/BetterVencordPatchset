@@ -303,6 +303,8 @@ async function run() {
     await execWithInheritedStdio("pnpm", ["build", "--standalone"], { cwd: distDir });
     await execWithInheritedStdio("pnpm", ["buildWeb"], { cwd: distDir });
 
+    await fs.writeFile(`${distDir}/dist/package.json`, JSON.stringify({}));
+
     console.log("Build complete.");
     console.log("Base:", baseHash);
     console.log("Patchset:", builderHash);
