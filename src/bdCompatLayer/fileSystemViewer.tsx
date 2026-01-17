@@ -727,7 +727,7 @@ function createFilesSystemViewTabV2() {
 export function injectSettingsTabs() {
     const settingsPlugin = Vencord.Plugins.plugins.Settings as SettingsPlugin;
     const { customSections, customEntries } = settingsPlugin;
-    customSections.push(createFilesSystemViewTab);
+    // customSections.push(createFilesSystemViewTab);
     if (customEntries) {
         customEntries.push(createFilesSystemViewTabV2());
     }
@@ -735,6 +735,9 @@ export function injectSettingsTabs() {
 
 export function unInjectSettingsTab() {
     const settingsPlugin = Vencord.Plugins.plugins.Settings as SettingsPlugin;
-    const { customSections } = settingsPlugin;
-    customSections.splice(customSections.findIndex(x => x({}).className === createFilesSystemViewTab({}).className), 1);
+    const { customSections, customEntries } = settingsPlugin;
+    // customSections.splice(customSections.findIndex(x => x({}).className === createFilesSystemViewTab({}).className), 1);
+    if (customEntries) {
+        customEntries.splice(customEntries.findIndex(x => x.key === createFilesSystemViewTabV2().key), 1);
+    }
 }

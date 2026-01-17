@@ -122,7 +122,7 @@ async function ensurePnpm() {
         await execWithInheritedStdio("pnpm", ["--version"]);
         console.log("done");
     } catch (err) {
-        console.error( err instanceof Error ? err.stack || err.message : String(err));
+        console.error(err instanceof Error ? err.stack || err.message : String(err));
         throw new Error("pnpm not installed");
     }
 }
@@ -191,6 +191,14 @@ async function gitHash(dir: string) {
     return stdout.trim();
 }
 
+async function gitRemote(dir: string) {
+    const { stdout } = await exec("git", ["remote", "get-url", "origin"], { cwd: dir });
+    return stdout.trim()
+        .replace("https://github.com/", "")
+        .replace("git@github.com:", "")
+        .replace(/.git$/, "");;
+}
+
 enum BuildTypes {
     UNIVERSAL,
     VENCORD,
@@ -226,6 +234,11 @@ const patches = [
         targetFile: "scripts/build/common.mjs",
         targetType: BuildTypes.UNIVERSAL,
     },
+    // {
+    //     file: "src/patch-updater.patch",
+    //     targetFile: "src/main/updater/http.ts",
+    //     targetType: BuildTypes.UNIVERSAL,
+    // },
     // Equicord Specific
     {
         file: "src/equicord/patch-webpack.patch",
@@ -268,6 +281,7 @@ async function run() {
     await new Promise(r => setTimeout(r, 5000));
 
     const builderHash = await gitHash(".");
+    const builderRemote = await gitRemote(".");
     const workDir = buildTypeToPath(buildType);
     const baseDir = path.resolve("base/" + workDir);
     const distDir = path.resolve("dist/" + workDir);
@@ -299,6 +313,7 @@ async function run() {
     await execWithInheritedStdio("pnpm", ["i"], { cwd: distDir });
     process.env.VENCORD_HASH = `${baseHash} (BetterVencord patchset built by ${builderHash})`;
     process.env.EQUICORD_HASH = process.env.VENCORD_HASH;
+    process.env.BV_REMOTE = builderRemote;
 
     await execWithInheritedStdio("pnpm", ["build", "--standalone"], { cwd: distDir });
     await execWithInheritedStdio("pnpm", ["buildWeb"], { cwd: distDir });
