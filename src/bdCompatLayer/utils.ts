@@ -367,6 +367,11 @@ export const FSUtils = {
         const files = Array.isArray(fileOrFiles) ? (fileOrFiles as File[]) : [fileOrFiles as File];
         const fs = window.require("fs");
         const path = window.require("path");
+        
+        let successCount = 0;
+        let errorCount = 0;
+        const errors: string[] = [];
+
         for (const file of files) {
             let filePath = targetPath;
             compat_logger.log("[Importer] Importing file", filePath);
@@ -377,19 +382,56 @@ export const FSUtils = {
                 filePath += file.name;
             }
             compat_logger.log("[Importer] Resolved path:", filePath);
-            fs.writeFile(
-                filePath,
-                // window.BrowserFS.BFSRequire("buffer").Buffer.from(
-                // window.Buffer.from(
-                FSUtils.toBuffer(
-                    await file.arrayBuffer()
-                ),
-                err => {
-                    if (err)
-                        compat_logger.error("[Importer] Error during import", err);
-                    compat_logger.log("[Importer] Success");
-                }
-            );
+            
+            try {
+                const buffer = FSUtils.toBuffer(await file.arrayBuffer());
+                await new Promise<void>((resolve, reject) => {
+                    fs.writeFile(
+                        filePath,
+                        buffer,
+                        err => {
+                            if (err) {
+                                compat_logger.error("[Importer] Error during import", err);
+                                errorCount++;
+                                errors.push(`${file.name}: ${err.message}`);
+                                reject(err);
+                            } else {
+                                compat_logger.log("[Importer] Success");
+                                successCount++;
+                                resolve();
+                            }
+                        }
+                    );
+                });
+            } catch (err) {
+                // Error already logged
+            }
+        }
+
+        // Check if we're importing to the BD plugins folder
+        const isPluginImport = targetPath.includes("/BD/plugins") || targetPath.includes("//BD/plugins");
+        
+        // Show toast notification
+        const { getGlobalApi } = await import("./fakeBdApi");
+        if (successCount > 0) {
+            const message = bulk 
+                ? `Successfully imported ${successCount} plugin${successCount !== 1 ? "s" : ""}`
+                : `Plugin imported successfully`;
+            getGlobalApi().UI.showToast(message, 1);
+            
+            // Auto-reload BD plugins if importing to plugins folder
+            if (isPluginImport) {
+                compat_logger.log("[Importer] Auto-reloading BD plugins...");
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await reloadCompatLayer();
+                getGlobalApi().UI.showToast("Plugins reloaded - ready to enable!", 1);
+            }
+        }
+        
+        if (errorCount > 0) {
+            const message = `Failed to import ${errorCount} file${errorCount !== 1 ? "s" : ""}`;
+            getGlobalApi().UI.showToast(message, 2);
+            compat_logger.error("[Importer] Errors:", errors);
         }
     },
     exportFile(targetPath: string) {

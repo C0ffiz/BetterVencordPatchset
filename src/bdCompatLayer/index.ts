@@ -31,6 +31,7 @@ import { PLUGIN_NAME } from "./constants";
 import { cleanupGlobal, createGlobalBdApi, getGlobalApi } from "./fakeBdApi";
 import { addContextMenu, addDiscordModules, FakeEventEmitter, fetchWithCorsProxyFallback, Patcher } from "./fakeStuff";
 import { injectSettingsTabs, unInjectSettingsTab } from "./fileSystemViewer";
+import { injectPluginPageButtons, unInjectPluginPageButtons } from "./pluginPageInjection";
 import { addCustomPlugin, convertPlugin, removeAllCustomPlugins } from "./pluginConstructor";
 import { ReactUtils_filler } from "./stuffFromBD";
 import { compat_logger, FSUtils, getDeferred, reloadCompatLayer, simpleGET, ZIPUtils } from "./utils";
@@ -58,6 +59,36 @@ async function checkCorsProxyUrlCsp() {
         return true;
     }
     return false;
+}
+
+async function downloadZeresPluginLibrary(pluginsFolder: string, proxyUrl: string) {
+    const fs = window.require("fs");
+    const libraryFileName = "0PluginLibrary.plugin.js";
+    const libraryPath = pluginsFolder + "/" + libraryFileName;
+    
+    // Check if library already exists
+    if (fs.existsSync(libraryPath)) {
+        compat_logger.log("[ZPL] ZeresPluginLibrary already exists, skipping download");
+        return;
+    }
+    
+    compat_logger.log("[ZPL] Downloading ZeresPluginLibrary...");
+    const libraryUrl = "https://raw.githubusercontent.com/rauenzi/BDPluginLibrary/master/release/0PluginLibrary.plugin.js";
+    
+    try {
+        const response = await fetchWithCorsProxyFallback(libraryUrl, { method: "get" }, proxyUrl);
+        const libraryCode = await response.text();
+        
+        if (!libraryCode || libraryCode.length < 100) {
+            throw new Error("Downloaded file appears to be invalid (too small)");
+        }
+        
+        fs.writeFileSync(libraryPath, libraryCode);
+        compat_logger.log("[ZPL] ZeresPluginLibrary downloaded successfully");
+    } catch (error) {
+        compat_logger.error("[ZPL] Failed to download ZeresPluginLibrary:", error);
+        compat_logger.error("[ZPL] You may need to manually download it from: " + libraryUrl);
+    }
 }
 
 const thePlugin = {
@@ -158,6 +189,7 @@ const thePlugin = {
     globalDefineWasNotExisting: false,
     start() {
         injectSettingsTabs();
+        injectPluginPageButtons();
         const reimplementationsReady = getDeferred<void>();
         // const proxyUrl = "https://api.allorigins.win/raw?url=";
         // const proxyUrl = "https://cors-get-proxy.sirjosh.workers.dev/?url=";
@@ -446,7 +478,7 @@ const thePlugin = {
         //     if (window.BdApi.ReqImpl.fs === undefined)
         //         return;
         //     clearInterval(checkInterval);
-        Promise.all([windowBdCompatLayer.fsReadyPromise.promise, injectedAndPatched]).then(() => {
+        Promise.all([windowBdCompatLayer.fsReadyPromise.promise, injectedAndPatched]).then(async () => {
             windowBdCompatLayer.Router?.listeners.add(windowBdCompatLayer.mainRouterListener);
             const observer = new MutationObserver(mutations => mutations.forEach(m => window.GeneratedPlugins.forEach(p => BdApiReImplementation.Plugins.isEnabled(p.name) && p.instance.observer?.(m))));
             observer.observe(document, {
@@ -461,6 +493,10 @@ const thePlugin = {
                 // Utils.mkdirSyncRecursive(BdApiReImplementation.Plugins.folder);
                 FSUtils.mkdirSyncRecursive(BdApiReImplementation.Plugins.folder);
             }
+            
+            // Auto-download ZeresPluginLibrary if not present
+            await downloadZeresPluginLibrary(BdApiReImplementation.Plugins.folder, proxyUrl);
+            
             for (const key in this.options) {
                 if (Object.hasOwnProperty.call(this.options, key)) {
                     if (Settings.plugins[this.name][key] && key.startsWith("pluginUrl")) {
@@ -811,6 +847,8 @@ const thePlugin = {
         getGlobalApi().DOM.removeStyle("bd-compat-layer-fs");
         compat_logger.warn("Removing settings tab...");
         unInjectSettingsTab();
+        compat_logger.warn("Removing plugin page buttons...");
+        unInjectPluginPageButtons();
         // console.warn("Freeing blobs...");
         // Object.values(window.GeneratedPluginsBlobs).forEach(x => {
         //     URL.revokeObjectURL(x);
