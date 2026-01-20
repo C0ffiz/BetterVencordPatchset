@@ -44,6 +44,10 @@ import { RealFSClient, RealFs } from "real-fs-client";
 import { IndexedDB as ZenFS_IndexedDB, WebStorage as ZenFS_WebStorage } from "@zenfs/dom";
 import * as ZenFS_path from "@zenfs/core/path";
 
+// Constants for validation and timing
+const MIN_PLUGIN_FILE_SIZE = 100; // Minimum size in bytes for a valid plugin file
+const FILESYSTEM_SYNC_DELAY_MS = 500; // Delay to allow filesystem operations to complete
+
 async function checkCorsProxyUrlCsp() {
     if (IS_WEB) return true;
 
@@ -81,7 +85,7 @@ async function downloadZeresPluginLibrary(pluginsFolder: string, proxyUrl: strin
         
         // Validate downloaded content - check for minimum size and typical plugin header
         // A valid BetterDiscord plugin should be at least a few KB and contain META
-        if (!libraryCode || libraryCode.length < 100) {
+        if (!libraryCode || libraryCode.length < MIN_PLUGIN_FILE_SIZE) {
             throw new Error("Downloaded file appears to be invalid (too small)");
         }
         if (!libraryCode.includes("@name") || !libraryCode.includes("ZeresPluginLibrary")) {

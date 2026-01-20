@@ -22,7 +22,8 @@ import { React } from "@webpack/common";
 import { FSUtils } from "./utils";
 import { compat_logger } from "./utils";
 
-let originalToolbarComponent: any = null;
+// Module-level variable to store the observer for cleanup
+let toolbarObserver: MutationObserver | null = null;
 
 export function ImportBDPluginButton() {
     return React.createElement(
@@ -67,7 +68,7 @@ export function injectPluginPageButtons() {
             // Look for common elements on the plugins page
             // Try multiple selectors for better compatibility
             const pluginsPage = 
-                document.querySelector('[role="tabpanel"][aria-label*="lugin"]') ||
+                document.querySelector('[role="tabpanel"][aria-label*="Plugin"], [role="tabpanel"][aria-label*="plugin"]') ||
                 document.querySelector('[class*="contentColumn"]') ||
                 document.querySelector('div[class*="plugins"]');
             
@@ -117,7 +118,23 @@ export function injectPluginPageButtons() {
             const createButton = (text: string, isBulk: boolean) => {
                 const btn = document.createElement("button");
                 btn.className = "bd-compat-import-btn";
-                btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" /></svg>${text}`;
+                
+                // Create icon element safely
+                const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                icon.setAttribute("width", "16");
+                icon.setAttribute("height", "16");
+                icon.setAttribute("viewBox", "0 0 24 24");
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("fill", "currentColor");
+                path.setAttribute("d", "M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z");
+                icon.appendChild(path);
+                
+                // Create text element safely
+                const textNode = document.createTextNode(text);
+                
+                btn.appendChild(icon);
+                btn.appendChild(textNode);
+                
                 btn.onclick = async () => {
                     try {
                         await FSUtils.importFile("//BD/plugins", true, isBulk, ".js");
@@ -142,8 +159,8 @@ export function injectPluginPageButtons() {
             subtree: true
         });
         
-        // Store observer for cleanup
-        (window as any).__bdCompatToolbarObserver = observer;
+        // Store observer in module-level variable for cleanup
+        toolbarObserver = observer;
         
         compat_logger.log("Plugin page button observer started");
     } catch (error) {
@@ -153,10 +170,9 @@ export function injectPluginPageButtons() {
 
 export function unInjectPluginPageButtons() {
     try {
-        const observer = (window as any).__bdCompatToolbarObserver;
-        if (observer) {
-            observer.disconnect();
-            delete (window as any).__bdCompatToolbarObserver;
+        if (toolbarObserver) {
+            toolbarObserver.disconnect();
+            toolbarObserver = null;
         }
         
         const toolbar = document.getElementById("bd-compat-toolbar");

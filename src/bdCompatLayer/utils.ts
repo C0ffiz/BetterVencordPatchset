@@ -27,6 +27,9 @@ import { addCustomPlugin, convertPlugin, removeAllCustomPlugins } from "./plugin
 
 export const compat_logger = new Logger("BD Compat Layer", "#a6d189");
 
+// Delay to allow filesystem operations to complete before reloading plugins
+const FILESYSTEM_SYNC_DELAY_MS = 500;
+
 export function getDeferred<T = any>() {
     let resolve: (value: T | PromiseLike<T>) => void;
     let reject: (reason?: any) => void;
@@ -424,7 +427,7 @@ export const FSUtils = {
             // Auto-reload BD plugins if importing to plugins folder
             if (isPluginImport) {
                 compat_logger.log("[Importer] Auto-reloading BD plugins...");
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, FILESYSTEM_SYNC_DELAY_MS));
                 await reloadCompatLayer();
                 getGlobalApi().UI.showToast("Plugins reloaded - ready to enable!", 1);
             }
