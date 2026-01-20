@@ -79,8 +79,13 @@ async function downloadZeresPluginLibrary(pluginsFolder: string, proxyUrl: strin
         const response = await fetchWithCorsProxyFallback(libraryUrl, { method: "get" }, proxyUrl);
         const libraryCode = await response.text();
         
+        // Validate downloaded content - check for minimum size and typical plugin header
+        // A valid BetterDiscord plugin should be at least a few KB and contain META
         if (!libraryCode || libraryCode.length < 100) {
             throw new Error("Downloaded file appears to be invalid (too small)");
+        }
+        if (!libraryCode.includes("@name") || !libraryCode.includes("ZeresPluginLibrary")) {
+            throw new Error("Downloaded file doesn't appear to be ZeresPluginLibrary");
         }
         
         fs.writeFileSync(libraryPath, libraryCode);

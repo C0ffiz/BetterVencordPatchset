@@ -409,7 +409,9 @@ export const FSUtils = {
         }
 
         // Check if we're importing to the BD plugins folder
-        const isPluginImport = targetPath.includes("/BD/plugins") || targetPath.includes("//BD/plugins");
+        // Normalize path for cross-platform compatibility
+        const normalizedPath = targetPath.replace(/\\/g, "/");
+        const isPluginImport = normalizedPath.includes("/BD/plugins");
         
         // Show toast notification
         const { getGlobalApi } = await import("./fakeBdApi");

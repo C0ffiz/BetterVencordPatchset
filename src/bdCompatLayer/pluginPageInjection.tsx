@@ -64,22 +64,59 @@ export function injectPluginPageButtons() {
     try {
         // Use MutationObserver to watch for the plugins page
         const observer = new MutationObserver(() => {
-            const pluginsHeader = document.querySelector('[class*="bd-plugins-header"], [class*="plugins-"] h2');
-            if (!pluginsHeader) return;
+            // Look for common elements on the plugins page
+            // Try multiple selectors for better compatibility
+            const pluginsPage = 
+                document.querySelector('[role="tabpanel"][aria-label*="lugin"]') ||
+                document.querySelector('[class*="contentColumn"]') ||
+                document.querySelector('div[class*="plugins"]');
+            
+            if (!pluginsPage) return;
             
             // Check if we already injected
             if (document.getElementById("bd-compat-toolbar")) return;
             
-            // Create toolbar
+            // Create toolbar with proper CSS classes
             const toolbar = document.createElement("div");
             toolbar.id = "bd-compat-toolbar";
-            toolbar.style.cssText = "display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;";
+            toolbar.className = "bd-compat-import-toolbar";
             
-            // We'll inject vanilla buttons instead of React components for simplicity
+            // Add styles via style element instead of inline
+            if (!document.getElementById("bd-compat-toolbar-styles")) {
+                const style = document.createElement("style");
+                style.id = "bd-compat-toolbar-styles";
+                style.textContent = `
+                    .bd-compat-import-toolbar {
+                        display: flex;
+                        gap: 8px;
+                        margin-bottom: 16px;
+                        flex-wrap: wrap;
+                    }
+                    .bd-compat-import-btn {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        padding: 2px 16px;
+                        border-radius: 3px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        background-color: var(--brand-experiment);
+                        color: white;
+                        border: none;
+                        transition: background-color 0.2s;
+                    }
+                    .bd-compat-import-btn:hover {
+                        background-color: var(--brand-experiment-560);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // Create buttons with cleaner implementation
             const createButton = (text: string, isBulk: boolean) => {
                 const btn = document.createElement("button");
-                btn.className = "vc-button vc-button-size-small vc-button-color-brand";
-                btn.style.cssText = "display: flex; align-items: center; gap: 4px; padding: 2px 16px; border-radius: 3px; font-size: 14px; font-weight: 500; cursor: pointer; background-color: var(--brand-experiment); color: white; border: none;";
+                btn.className = "bd-compat-import-btn";
                 btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" /></svg>${text}`;
                 btn.onclick = async () => {
                     try {
@@ -94,8 +131,8 @@ export function injectPluginPageButtons() {
             toolbar.appendChild(createButton("Import BD Plugin", false));
             toolbar.appendChild(createButton("Import Bulk Plugins", true));
             
-            // Insert toolbar before the plugins header
-            pluginsHeader.parentElement?.insertBefore(toolbar, pluginsHeader);
+            // Insert toolbar at the beginning of the plugins page
+            pluginsPage.insertBefore(toolbar, pluginsPage.firstChild);
             
             compat_logger.log("Plugin import toolbar injected");
         });
@@ -125,6 +162,11 @@ export function unInjectPluginPageButtons() {
         const toolbar = document.getElementById("bd-compat-toolbar");
         if (toolbar) {
             toolbar.remove();
+        }
+        
+        const styles = document.getElementById("bd-compat-toolbar-styles");
+        if (styles) {
+            styles.remove();
         }
         
         compat_logger.log("Plugin page buttons removed");
